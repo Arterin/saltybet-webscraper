@@ -1,3 +1,5 @@
+// noinspection JSUnusedLocalSymbols,SpellCheckingInspection
+
 const cheerio = require('cheerio');
 const axios = require('axios');
 
@@ -15,5 +17,3 @@ function scrapeSaltybet() {
         console.log(div);
     })
 }
-
-scrapeSaltybet()
