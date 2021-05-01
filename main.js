@@ -2,6 +2,7 @@
 
 const cheerio = require('cheerio');
 const axios = require('axios');
+const twit = require('twit');
 
 function scrapeSaltybet() {
 
