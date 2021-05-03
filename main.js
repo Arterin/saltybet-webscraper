@@ -5,7 +5,10 @@ const axios = require('axios');
 const twit = require('twit');
 const keys = require('./keys');
 
-const T = new twit(keys)
+const T = new twit(keys);
+
+let tweetLimiter = 0;
+const status = "Saltybet tournament starting in two matches!"
 
 async function scrapeSaltybet() {
     // Get saltybet html.
@@ -27,19 +30,32 @@ async function scrapeSaltybet() {
 function saltyPost() {
     // Get tournament string from saltybet.
     scrapeSaltybet().then(function(result) {
-        if(result === "The current game mode is: matchmaking. Tournament mode will be activated after the next match!") {
-            // Post to twitter
-            T.post('statuses/update', {status: 'Saltybet tournament starting now!'}, tweeted);
+        if(result === "2 more matches until the next tournament!" && tweetLimiter === 0) {
+            // Get current date and time, I live in UTC+12 so I have formatted the string to reflect that.
+            // TODO make this look not so hideous :)
+            const date = new Date().toUTCString();
+            let post = status + " " + date;
+            post.replace("GMT", "UTC+12")
+            // Post to twitter.
+            T.post('statuses/update', {status: post}, tweeted);
+            // Stop more tweets until after the tournament.
+            tweetLimiter = 1;
+        }
+
+        if(result.includes("exhibition")) {
+            // Allow Tweets again.
+            tweetLimiter = 0;
         }
     })
 }
 
 function tweeted(err, data, response) {
     if(err) {
-        console.log("error!", err.stack);
+        console.log("error: ", err.stack);
     } else {
         console.log(data);
     }
 }
-saltyPost();
-setInterval(saltyPost, 1000*60);
+
+// Call saltyPost() every 45 seconds.
+setInterval(saltyPost, 1000*45);
