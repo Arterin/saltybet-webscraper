@@ -4,6 +4,7 @@ const cheerio = require('cheerio');
 const axios = require('axios');
 const twit = require('twit');
 const keys = require('./keys');
+const webhook = require('./webhook');
 
 const T = new twit(keys);
 
@@ -29,7 +30,7 @@ async function scrapeSaltybet() {
 
 function saltyPost() {
     // Get tournament string from saltybet.
-    scrapeSaltybet().then(function(result) {
+    scrapeSaltybet().then(async function(result) {
         if(result === "2 more matches until the next tournament!" && tweetLimiter === 0) {
             // Get current date and time, I live in UTC+12 so I have formatted the string to reflect that.
             // TODO make this look not so hideous :)
@@ -40,6 +41,8 @@ function saltyPost() {
             T.post('statuses/update', {status: post}, tweeted);
             // Stop more tweets until after the tournament.
             tweetLimiter = 1;
+            // Post to discord webhook.
+            await postHook(status);
         }
 
         if(result.includes("exhibition")) {
@@ -55,6 +58,10 @@ function tweeted(err, data, response) {
     } else {
         console.log(data);
     }
+}
+
+async function postHook(text) {
+    await axios.post(webhook, {"content": text});
 }
 
 // Call saltyPost() every 45 seconds.
